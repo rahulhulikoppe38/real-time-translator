@@ -1,6 +1,9 @@
 [build]
   command = "npm run build"
-  publish = ".next"
+  publish = "out"
+  base = "."
 
-[dev]
-  command = "next dev"
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
