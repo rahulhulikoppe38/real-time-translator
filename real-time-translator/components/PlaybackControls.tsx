@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export default function PlaybackControls({ volume, setVolume, rate, setRate }: any) {
   return (
     <div className="flex justify-center gap-8">

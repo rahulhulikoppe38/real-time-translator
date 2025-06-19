@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import LanguageSelector from '@/components/LanguageSelector'
 import ListenButton from '@/components/ListenButton'
 import PlaybackControls from '@/components/PlaybackControls'
 import StatusIndicator from '@/components/StatusIndicator'
 import { translateText } from '@/lib/translator'
 import { speak } from '@/utils/speech'
+// import '../types/speech';
 
 export default function Home() {
   // const [sourceLang, setSourceLang] = useState('en-US')
@@ -19,59 +21,60 @@ const [targetLang, setTargetLang] = useState('hi')
 
   const handleListen = async () => {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true }) // ✅ Force mic permission
+    // ✅ Ask mic permission (prevents "audio-capture" issues)
+    await navigator.mediaDevices.getUserMedia({ audio: true });
 
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert('Speech recognition is not supported in this browser.')
-      return
+      alert('Speech recognition is not supported in this browser.');
+      return;
     }
 
-    console.log("🟢 Starting recognition...")
-    setStatus('listening')
+    const recognition = new SpeechRecognition();
+    recognition.lang = sourceLang;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
-    const recognition = new SpeechRecognition()
-    recognition.lang = sourceLang
-    recognition.interimResults = false
-    recognition.maxAlternatives = 1
+    setStatus('listening');
+    console.log('🎤 Listening...');
 
-    recognition.onstart = () => console.log("🎤 Listening...")
     recognition.onresult = async (event: SpeechRecognitionEvent) => {
-      const text = event.results[0][0].transcript
-      console.log("📝 Recognized text:", text)
-      setStatus('processing')
+      const text = event.results[0][0].transcript;
+      console.log('📝 Recognized:', text);
+      setStatus('processing');
 
       try {
-        const translated = await translateText(text, sourceLang, targetLang)
-        console.log("🌐 Translated text:", translated)
-        setStatus('speaking')
-        speak(translated, targetLang, volume, rate)
+        const translated = await translateText(text, sourceLang, targetLang);
+        console.log('🌐 Translated:', translated);
+        setStatus('speaking');
+        speak(translated, targetLang, volume, rate);
       } catch (err) {
-        console.error("Translation error:", err)
+        console.error('❌ Translation failed:', err);
       } finally {
-        setStatus('idle')
+        setStatus('idle');
       }
-    }
+    };
 
-    recognition.onerror = (event) => {
-      console.error("❌ Speech recognition error:", event.error)
-      setStatus('idle')
-    }
+    recognition.onerror = (event: any) => {
+      console.error('❌ Recognition error:', event.error);
+      alert('Speech recognition error: ' + event.error);
+      setStatus('idle');
+    };
 
     recognition.onend = () => {
-      console.log("🔚 Recognition ended")
-      if (status !== 'speaking') setStatus('idle')
-    }
+      console.log('🔚 Recognition ended');
+      if (status !== 'speaking') setStatus('idle');
+    };
 
-    recognition.start()
+    recognition.start();
   } catch (error) {
-    console.error("🎙️ Microphone access failed:", error)
-    alert('Microphone access denied or not available.')
-    setStatus('idle')
+    console.error('🎙️ Microphone access failed:', error);
+    alert('Microphone access denied or not available.');
+    setStatus('idle');
   }
-}
+};
 
 
 
