@@ -10,8 +10,6 @@ import { speak } from '@/utils/speech'
 // import '../types/speech';
 
 export default function Home() {
-  // const [sourceLang, setSourceLang] = useState('en-US')
-  // const [targetLang, setTargetLang] = useState('hi-IN')
   const [sourceLang, setSourceLang] = useState('en')
 const [targetLang, setTargetLang] = useState('hi')
 
@@ -22,13 +20,20 @@ const [targetLang, setTargetLang] = useState('hi')
   const handleListen = async () => {
   try {
     // ✅ Ask mic permission (prevents "audio-capture" issues)
-    await navigator.mediaDevices.getUserMedia({ audio: true });
+    navigator.mediaDevices.getUserMedia({ audio: true })
+  .then((stream) => {
+    console.log("🎤 Mic access granted");
+    stream.getTracks().forEach(track => track.stop()); // release mic
+  })
+  .catch((error) => {
+    console.error("🚫 Mic access failed:", error.name, error.message);
+  });
 
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert('Speech recognition is not supported in this browser.');
+      alert('❌ Your browser does not support Speech Recognition.')
       return;
     }
 
